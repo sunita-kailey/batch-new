@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="batch-testFlow" doc:id="4ecd7f3f-3b60-485c-86c8-a11c908abe37" >
+		<scheduler doc:name="Scheduler" doc:id="edd9cd53-4fcf-42a7-b350-2c7086ac7789" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="60" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<set-payload value="#[['a','b','c','d','e']]" doc:name="['a','b','c','d','e']" doc:id="a83baed0-c628-4aad-b00f-7dd3e902ddcf" />
+		<logger level="INFO" doc:name="Logger" doc:id="68d4f2df-4343-4d80-a693-70fae1b95f5b" message="===============Before batch :#[payload]=============="/>
+		<batch:job jobName="mybatchjob" doc:id="19288c7b-3f44-4998-bad5-4ded72848d38" maxFailedRecords="1">
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="6638e7bb-eec9-4062-a1ea-330b539891c4" acceptExpression="#[ not (payload contains 'b')]">
+					<ee:transform doc:name="Transform Message" doc:id="2aad9783-4d8f-43d3-8df9-9dec833767e6" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+upper(payload)]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="7194dd7d-4886-4def-adc3-4a7bc5bab572" size="3">
+						<logger level="INFO" doc:name="Logger" doc:id="22d4bde9-223d-4747-b039-7fd98f5d6ae4" message="#[output application/json --- payload]"/>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="e715aeab-33f6-459d-b31c-a5d1667bdd52" message="#[output apploication/json --- payload]"/>
+			</batch:on-complete>
+		</batch:job>
+		<logger level="INFO" doc:name="Logger" doc:id="60e53917-9007-4e71-96fb-02056f23d6c5" message="#[output application/json --- payload]"/>
+	</flow>
+</mule>
